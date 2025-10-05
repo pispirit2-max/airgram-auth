@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Airgram - 인증 완료</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Malgun Gothic', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            padding: 20px;
+        }
+        .container {
+            text-align: center;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .icon {
+            font-size: 80px;
+            margin-bottom: 25px;
+            animation: bounce 1.5s ease-in-out infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-10px) scale(1.1); }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        h1 { font-size: 32px; font-weight: 700; margin-bottom: 20px; }
+        .subtitle { font-size: 18px; opacity: 0.9; line-height: 1.6; margin-bottom: 30px; }
+        .features {
+            margin: 30px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+        }
+        .feature-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 10px 0;
+            font-size: 16px;
+        }
+        .feature-item::before {
+            content: "✓";
+            margin-right: 10px;
+            color: #4ade80;
+            font-weight: bold;
+        }
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 30px 0 20px 0;
+        }
+        .btn {
+            padding: 12px 25px;
+            background: rgba(59, 130, 246, 0.8);
+            border: 2px solid rgba(59, 130, 246, 0.9);
+            border-radius: 25px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        .btn:hover {
+            background: rgba(59, 130, 246, 1);
+            transform: translateY(-2px);
+        }
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+        .countdown { margin-top: 25px; font-size: 14px; opacity: 0.7; }
+        .error-state h1 { color: #ef4444; }
+        .error-state .icon { animation: shake 0.5s ease-in-out; }
+        .success-state h1 { color: #22c55e; }
+        .reset-state h1 { color: #f59e0b; }
+        .reset-state .feature-item::before { content: "🔒"; color: #f59e0b; }
+        
+        @media (max-width: 480px) {
+            .container { padding: 30px 20px; }
+            h1 { font-size: 24px; }
+            .subtitle { font-size: 16px; }
+            .btn-group { flex-direction: column; align-items: center; }
+            .btn { width: 200px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="container">
+        <div class="icon" id="icon">🎉</div>
+        <h1 id="title">이메일 인증 완료!</h1>
+        <p class="subtitle" id="subtitle">
+            축하합니다! Airgram 계정이 성공적으로 인증되었습니다.<br>
+            이제 모든 기능을 사용하실 수 있어요!
+        </p>
+        
+        <div class="features" id="features">
+            <div class="feature-item">실시간 메시지 주고받기</div>
+            <div class="feature-item">친구 추가 및 관리</div>
+            <div class="feature-item">프로필 설정하기</div>
+            <div class="feature-item">안전한 계정 보호</div>
+        </div>
+        
+        <div class="btn-group">
+            <button class="btn" id="primaryBtn" onclick="openApp()">앱에서 시작하기</button>
+            <button class="btn btn-secondary" onclick="closeWindow()">창 닫기</button>
+        </div>
+        
+        <div class="countdown" id="countdown">10초 후 자동으로 앱으로 이동합니다...</div>
+    </div>
+
+    <script>
+        let seconds = 10;
+        const countdownElement = document.getElementById('countdown');
+        const containerElement = document.getElementById('container');
+        const iconElement = document.getElementById('icon');
+        const titleElement = document.getElementById('title');
+        const subtitleElement = document.getElementById('subtitle');
+        const featuresElement = document.getElementById('features');
+        const primaryBtnElement = document.getElementById('primaryBtn');
+        
+        // URL 파라미터 확인 (더 정확한 감지)
+        const urlParams = new URLSearchParams(window.location.search);
+        const hash = window.location.hash;
+        const hashParams = new URLSearchParams(hash.replace('#', ''));
+        
+        // 에러 체크
+        const hasError = urlParams.get('error') || hash.includes('error') || hashParams.get('error');
+        
+        // 비밀번호 재설정 체크 (더 포괄적으로)
+        const isPasswordReset = 
+            hash.includes('type=recovery') || 
+            urlParams.get('type') === 'recovery' ||
+            hashParams.get('type') === 'recovery' ||
+            hash.includes('recovery') ||
+            window.location.href.includes('recovery') ||
+            window.location.href.includes('reset');
+        
+        function updateCountdown() {
+            if (seconds > 0) {
+                countdownElement.textContent = `${seconds}초 후 자동으로 앱으로 이동합니다...`;
+                seconds--;
+                setTimeout(updateCountdown, 1000);
+            } else {
+                openApp();
+            }
+        }
+        
+        function openApp() {
+            console.log('앱으로 이동 시도...');
+            
+            if (!hasError) {
+                let deepLink = 'airgram://auth-callback?success=true';
+                if (isPasswordReset) {
+                    deepLink += '&type=recovery';
+                } else {
+                    deepLink += '&verified=true';
+                }
+                
+                window.location.href = deepLink;
+                
+                setTimeout(() => {
+                    showFinalMessage();
+                }, 1000);
+            }
+        }
+        
+        function closeWindow() {
+            openApp();
+            setTimeout(() => {
+                try {
+                    window.close();
+                } catch (e) {
+                    showFinalMessage();
+                }
+            }, 500);
+        }
+        
+        function showFinalMessage() {
+            titleElement.textContent = '처리 완료!';
+            subtitleElement.innerHTML = '이제 Airgram 앱으로 돌아가서<br>' + 
+                (isPasswordReset ? '새로운 비밀번호를 설정해주세요!' : '로그인해주세요!');
+            countdownElement.textContent = '앱에서 확인해보세요.';
+            
+            const btnGroup = document.querySelector('.btn-group');
+            btnGroup.innerHTML = '<button class="btn" onclick="location.reload()">다시 시도</button>';
+        }
+        
+        // 상태별 초기화
+        if (hasError) {
+            containerElement.classList.add('error-state');
+            iconElement.textContent = '❌';
+            titleElement.textContent = isPasswordReset ? '재설정 실패' : '인증 실패';
+            subtitleElement.innerHTML = isPasswordReset 
+                ? '비밀번호 재설정에 실패했습니다.<br>다시 시도해주세요.'
+                : '이메일 인증에 실패했습니다.<br>다시 시도해주세요.';
+            countdownElement.textContent = '앱에서 다시 요청해주세요.';
+            seconds = 0;
+        } else if (isPasswordReset) {
+            containerElement.classList.add('reset-state');
+            iconElement.textContent = '🔓';
+            titleElement.textContent = '재설정 준비 완료!';
+            subtitleElement.innerHTML = '비밀번호 재설정이 승인되었습니다.<br>앱에서 새로운 비밀번호를 입력해주세요!';
+            
+            featuresElement.innerHTML = `
+                <div class="feature-item">안전한 새 비밀번호 설정</div>
+                <div class="feature-item">최소 6자 이상 권장</div>
+                <div class="feature-item">숫자와 문자 조합</div>
+                <div class="feature-item">계정 보안 강화</div>
+            `;
+            
+            primaryBtnElement.textContent = '앱에서 비밀번호 설정';
+            updateCountdown();
+        } else {
+            containerElement.classList.add('success-state');
+            updateCountdown();
+        }
+        
+        // 로그
+        console.log('인증 페이지 로드 완료');
+        console.log('URL:', window.location.href);
+        console.log('Hash:', hash);
+        console.log('에러 상태:', hasError);
+        console.log('비밀번호 재설정:', isPasswordReset);
+    </script>
+</body>
+</html>
