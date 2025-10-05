@@ -89,13 +89,26 @@
         const urlParams = new URLSearchParams(window.location.search);
         const hash = window.location.hash;
         const hashParams = new URLSearchParams(hash.substring(1)); // # 제거
+        const fullUrl = window.location.href.toLowerCase();
         
         // 여러 방법으로 타입 감지
         let type = urlParams.get('type') || hashParams.get('type');
         
-        // Supabase 기본 동작 기반 감지
+        // Supabase 비밀번호 재설정 감지 (더 포괄적)
         if (!type) {
-            if (hash.includes('type=recovery') || urlParams.get('token_hash') || hashParams.get('token_hash')) {
+            // 비밀번호 재설정 패턴들
+            const isPasswordReset = 
+                fullUrl.includes('type=recovery') ||
+                fullUrl.includes('token_hash') ||
+                fullUrl.includes('password') ||
+                fullUrl.includes('reset') ||
+                hashParams.get('token_hash') ||
+                urlParams.get('token_hash') ||
+                hash.includes('recovery') ||
+                // Supabase 기본 패턴
+                (hash.includes('access_token') && hash.includes('expires_in') && !hash.includes('type=signup'));
+            
+            if (isPasswordReset) {
                 type = 'recovery';
             } else {
                 type = 'signup';
