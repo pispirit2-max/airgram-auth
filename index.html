@@ -5,7 +5,48 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Airgram - 이메일 인증 완료</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padd        // URL에서 타입 확인
+        const urlParams = new URLSearchParams(window.location.search);
+        const hash = window.location.hash;
+        const hasError = urlParams.get('error') || hash.includes('error');
+        const isPasswordReset = hash.includes('type=recovery') || urlParams.get('type') === 'recovery';
+        
+        // 상태별 처리
+        if (hasError) {
+            containerElement.classList.add('error-state');
+            iconElement.textContent = '❌';
+            titleElement.textContent = isPasswordReset ? '재설정 실패' : '인증 실패';
+            subtitleElement.innerHTML = isPasswordReset 
+                ? '비밀번호 재설정에 실패했습니다.<br>다시 시도해주세요.'
+                : '이메일 인증에 실패했습니다.<br>다시 시도해주세요.';
+            countdownElement.textContent = '앱에서 다시 요청해주세요.';
+            seconds = 0; // 에러 시 자동 이동 비활성화
+        } else if (isPasswordReset) {
+            // 비밀번호 재설정 성공
+            iconElement.textContent = '🔓';
+            titleElement.textContent = '재설정 준비 완료!';
+            subtitleElement.innerHTML = '비밀번호 재설정이 승인되었습니다.<br>앱에서 새로운 비밀번호를 입력해주세요!';
+            
+            // 기능 설명 업데이트
+            const features = document.querySelector('.features');
+            features.innerHTML = `
+                <div class="feature-item">안전한 새 비밀번호 설정</div>
+                <div class="feature-item">최소 6자 이상 권장</div>
+                <div class="feature-item">숫자와 문자 조합</div>
+                <div class="feature-item">계정 보안 강화</div>
+            `;
+            
+            // 버튼 텍스트 변경
+            document.querySelector('.btn-primary').textContent = '앱에서 비밀번호 설정';
+            updateCountdown();
+        } else {
+            // 일반 인증 성공
+            updateCountdown();
+        }       box-sizing: border-box;
+        }
+        
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Malgun Gothic', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -16,6 +57,7 @@
             color: white;
             padding: 20px;
         }
+        
         .container {
             text-align: center;
             padding: 40px;
@@ -27,56 +69,243 @@
             width: 100%;
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
+        
         .success-icon {
             font-size: 80px;
             margin-bottom: 25px;
             animation: bounce 1.5s ease-in-out infinite;
+            display: block;
         }
+        
         @keyframes bounce {
             0%, 100% { transform: translateY(0) scale(1); }
             50% { transform: translateY(-10px) scale(1.1); }
         }
-        h1 { font-size: 32px; font-weight: 700; margin-bottom: 20px; }
-        .subtitle { font-size: 18px; opacity: 0.9; line-height: 1.6; margin-bottom: 30px; }
+        
+        h1 {
+            margin: 0 0 20px 0;
+            font-size: 32px;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .subtitle {
+            margin: 0 0 30px 0;
+            font-size: 18px;
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+        
+        .features {
+            margin: 30px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .feature-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 10px 0;
+            font-size: 16px;
+        }
+        
+        .feature-item::before {
+            content: "✓";
+            margin-right: 10px;
+            color: #4ade80;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 30px 0 20px 0;
+        }
+        
         .btn {
             padding: 12px 25px;
-            background: rgba(59, 130, 246, 0.8);
-            border: 2px solid rgba(59, 130, 246, 0.9);
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
             border-radius: 25px;
             color: white;
+            text-decoration: none;
             font-weight: 600;
+            transition: all 0.3s ease;
             cursor: pointer;
-            margin: 10px;
+            font-size: 14px;
+            display: inline-block;
         }
-        .countdown { margin-top: 25px; font-size: 14px; opacity: 0.7; }
+        
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .btn-primary {
+            background: rgba(59, 130, 246, 0.8);
+            border-color: rgba(59, 130, 246, 0.9);
+        }
+        
+        .btn-primary:hover {
+            background: rgba(59, 130, 246, 1);
+        }
+        
+        .countdown {
+            margin-top: 25px;
+            font-size: 14px;
+            opacity: 0.7;
+            font-style: italic;
+        }
+        
+        .error-state h1 {
+            color: #ef4444;
+        }
+        
+        .error-state .success-icon {
+            animation: shake 0.5s ease-in-out;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 30px 20px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+            
+            .subtitle {
+                font-size: 16px;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 200px;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="success-icon">🎉</div>
-        <h1>이메일 인증 완료!</h1>
-        <p class="subtitle">
+    <div class="container" id="container">
+        <div class="success-icon" id="icon">🎉</div>
+        <h1 id="title">이메일 인증 완료!</h1>
+        <p class="subtitle" id="subtitle">
             축하합니다! Airgram 계정이 성공적으로 인증되었습니다.<br>
             이제 모든 기능을 사용하실 수 있어요!
         </p>
-        <button class="btn" onclick="openApp()">앱에서 시작하기</button>
+        
+        <div class="features">
+            <div class="feature-item">실시간 메시지 주고받기</div>
+            <div class="feature-item">친구 추가 및 관리</div>
+            <div class="feature-item">프로필 설정하기</div>
+            <div class="feature-item">안전한 계정 보호</div>
+        </div>
+        
+        <div class="btn-group">
+            <button class="btn btn-primary" onclick="openApp()">앱에서 시작하기</button>
+            <button class="btn" onclick="closeWindow()">창 닫기</button>
+        </div>
+        
         <div class="countdown" id="countdown">10초 후 자동으로 앱으로 이동합니다...</div>
     </div>
+
     <script>
         let seconds = 10;
+        const countdownElement = document.getElementById('countdown');
+        const containerElement = document.getElementById('container');
+        const iconElement = document.getElementById('icon');
+        const titleElement = document.getElementById('title');
+        const subtitleElement = document.getElementById('subtitle');
+        
+        // URL 파라미터 확인
+        const urlParams = new URLSearchParams(window.location.search);
+        const hasError = urlParams.get('error') || window.location.hash.includes('error');
+        
         function updateCountdown() {
             if (seconds > 0) {
-                document.getElementById('countdown').textContent = `${seconds}초 후 자동으로 앱으로 이동합니다...`;
+                countdownElement.textContent = `${seconds}초 후 자동으로 앱으로 이동합니다...`;
                 seconds--;
                 setTimeout(updateCountdown, 1000);
             } else {
                 openApp();
             }
         }
+        
         function openApp() {
-            window.location.href = 'airgram://auth-callback?success=true&verified=true';
+            console.log('앱으로 이동 시도...');
+            
+            // 성공한 경우 앱으로 리다이렉트
+            if (!hasError) {
+                // 딥링크로 앱 열기 시도
+                window.location.href = 'airgram://auth-callback?success=true&verified=true';
+                
+                // 1초 후에도 페이지가 그대로 있으면 메시지 표시
+                setTimeout(() => {
+                    showFinalMessage();
+                }, 1000);
+            }
         }
-        updateCountdown();
+        
+        function closeWindow() {
+            // 앱 열기 시도
+            openApp();
+            
+            // 창 닫기 시도
+            setTimeout(() => {
+                try {
+                    window.close();
+                } catch (e) {
+                    showFinalMessage();
+                }
+            }, 500);
+        }
+        
+        function showFinalMessage() {
+            titleElement.textContent = '인증 완료!';
+            subtitleElement.innerHTML = '이제 Airgram 앱으로 돌아가서<br>로그인해주세요!';
+            countdownElement.textContent = '앱에서 로그인 화면을 확인해보세요.';
+            
+            // 버튼 업데이트
+            const btnGroup = document.querySelector('.btn-group');
+            btnGroup.innerHTML = '<button class="btn btn-primary" onclick="location.reload()">다시 시도</button>';
+        }
+        
+        // 에러 상태 처리
+        if (hasError) {
+            containerElement.classList.add('error-state');
+            iconElement.textContent = '❌';
+            titleElement.textContent = '인증 실패';
+            subtitleElement.innerHTML = '이메일 인증에 실패했습니다.<br>다시 시도해주세요.';
+            countdownElement.textContent = '앱에서 다시 인증을 요청해주세요.';
+            
+            // 에러 시에는 자동 이동 비활성화
+            seconds = 0;
+        } else {
+            // 성공 시 카운트다운 시작
+            updateCountdown();
+        }
+        
+        // 페이지 로드 완료 로그
+        console.log('인증 페이지 로드 완료');
+        console.log('URL:', window.location.href);
+        console.log('에러 상태:', hasError);
     </script>
 </body>
 </html>

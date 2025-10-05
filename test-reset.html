@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔐 비밀번호 재설정 완료 - Airgram</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white; 
+            text-align: center; 
+            padding: 50px; 
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container { 
+            background: rgba(255,255,255,0.1); 
+            padding: 40px; 
+            border-radius: 20px; 
+            backdrop-filter: blur(10px);
+        }
+        h1 { font-size: 2rem; margin-bottom: 20px; }
+        .subtitle { font-size: 1.2rem; margin-bottom: 30px; line-height: 1.6; }
+        .btn { 
+            background: white; 
+            color: #ff6b6b; 
+            padding: 15px 30px; 
+            border: none; 
+            border-radius: 25px; 
+            font-size: 16px; 
+            cursor: pointer; 
+            margin: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 비밀번호 재설정 완료!</h1>
+        <p class="subtitle">
+            <strong>✅ 인증이 완료되었습니다!</strong><br><br>
+            이제 Airgram 앱으로 돌아가서<br>
+            새로운 비밀번호를 설정해주세요.
+        </p>
+        <button class="btn" onclick="openApp()">앱으로 이동</button>
+        <button class="btn" onclick="window.close()">창 닫기</button>
+        <p id="countdown">3초 후 자동으로 앱으로 이동합니다...</p>
+    </div>
+    
+    <script>
+        console.log('🔐 비밀번호 재설정 페이지 - 테스트용');
+        let seconds = 3;
+        
+        function openApp() {
+            window.location.href = 'airgram://auth-callback?type=recovery&success=true';
+        }
+        
+        function countdown() {
+            if (seconds > 0) {
+                document.getElementById('countdown').textContent = `${seconds}초 후 자동으로 앱으로 이동합니다...`;
+                seconds--;
+                setTimeout(countdown, 1000);
+            } else {
+                openApp();
+            }
+        }
+        
+        countdown();
+    </script>
+</body>
+</html>

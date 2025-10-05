@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>🔐 비밀번호 재설정 완료!</title>
+    <style>
+        body { 
+            font-family: Arial; 
+            text-align: center; 
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24); 
+            color: white; 
+            padding: 50px; 
+            min-height: 100vh; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+        }
+        .container { background: rgba(255,255,255,0.1); padding: 40px; border-radius: 20px; }
+        h1 { font-size: 2.5rem; margin-bottom: 20px; }
+        p { font-size: 1.2rem; margin-bottom: 30px; }
+        .btn { 
+            background: white; 
+            color: #ff6b6b; 
+            padding: 15px 30px; 
+            border: none; 
+            border-radius: 25px; 
+            font-size: 16px; 
+            cursor: pointer; 
+            margin: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 비밀번호 재설정 완료!</h1>
+        <p>비밀번호 재설정이 승인되었습니다!<br>이제 Airgram 앱으로 돌아가서<br>새로운 비밀번호를 설정해주세요!</p>
+        <button class="btn" onclick="window.location.href='airgram://auth-callback?type=recovery&success=true'">앱으로 이동</button>
+        <button class="btn" onclick="window.close()">창 닫기</button>
+        <p><small>3초 후 자동으로 앱으로 이동합니다...</small></p>
+    </div>
+    <script>
+        setTimeout(() => {
+            window.location.href = 'airgram://auth-callback?type=recovery&success=true';
+        }, 3000);
+    </script>
+</body>
+</html>
