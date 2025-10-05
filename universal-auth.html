@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Airgram 인증 완료</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        
+        .icon { font-size: 60px; margin-bottom: 20px; }
+        h1 { color: white; margin-bottom: 15px; font-size: 28px; }
+        .subtitle { color: rgba(255, 255, 255, 0.9); margin-bottom: 30px; line-height: 1.5; }
+        
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .password-reset {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .password-reset .icon { animation: pulse 2s infinite; }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        .countdown { margin-top: 20px; font-size: 14px; opacity: 0.8; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container" id="container">
+        <div class="icon" id="icon">✅</div>
+        <h1 id="title">인증 완료!</h1>
+        <p class="subtitle" id="subtitle">
+            성공적으로 처리되었습니다.<br>
+            앱으로 돌아가주세요!
+        </p>
+        
+        <button class="btn" onclick="openApp()">앱으로 이동</button>
+        <button class="btn" onclick="closeWindow()">창 닫기</button>
+        
+        <div class="countdown" id="countdown">5초 후 자동으로 앱으로 이동합니다...</div>
+    </div>
+
+    <script>
+        let seconds = 5;
+        const countdownElement = document.getElementById('countdown');
+        const containerElement = document.getElementById('container');
+        const iconElement = document.getElementById('icon');
+        const titleElement = document.getElementById('title');
+        const subtitleElement = document.getElementById('subtitle');
+        
+        // URL 파라미터 분석 (더 정확한 감지)
+        const urlParams = new URLSearchParams(window.location.search);
+        const hash = window.location.hash;
+        const hashParams = new URLSearchParams(hash.substring(1)); // # 제거
+        
+        // 여러 방법으로 타입 감지
+        let type = urlParams.get('type') || hashParams.get('type');
+        
+        // Supabase 기본 동작 기반 감지
+        if (!type) {
+            if (hash.includes('type=recovery') || urlParams.get('token_hash') || hashParams.get('token_hash')) {
+                type = 'recovery';
+            } else {
+                type = 'signup';
+            }
+        }
+        
+        const hasError = urlParams.get('error') || hash.includes('error') || hashParams.get('error');
+        
+        console.log('=== 인증 페이지 정보 ===');
+        console.log('감지된 타입:', type);
+        console.log('전체 URL:', window.location.href);
+        console.log('Search params:', window.location.search);
+        console.log('Hash:', hash);
+        console.log('에러 상태:', hasError);
+        console.log('========================');
+        
+        // 타입별 UI 설정
+        if (type === 'recovery') {
+            // 비밀번호 재설정
+            containerElement.classList.add('password-reset');
+            document.body.style.background = 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)';
+            iconElement.textContent = '�';
+            titleElement.textContent = '비밀번호 재설정 인증 완료!';
+            subtitleElement.innerHTML = '<strong>✅ 비밀번호 재설정이 승인되었습니다!</strong><br><br>이제 Airgram 앱으로 돌아가서<br>새로운 비밀번호를 설정해주세요.';
+            countdownElement.textContent = '3초 후 앱으로 자동 이동합니다...';
+            seconds = 3;
+        } else {
+            // 이메일 인증 (회원가입)
+            document.body.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+            iconElement.textContent = '🎉';
+            titleElement.textContent = '회원가입 완료!';
+            subtitleElement.innerHTML = '<strong>✅ 이메일 인증이 완료되었습니다!</strong><br><br>이제 Airgram의 모든 기능을<br>사용할 수 있습니다!';
+            countdownElement.textContent = '5초 후 앱으로 자동 이동합니다...';
+            seconds = 5;
+        }
+        
+        function updateCountdown() {
+            if (seconds > 0 && !hasError) {
+                countdownElement.textContent = `${seconds}초 후 자동으로 앱으로 이동합니다...`;
+                seconds--;
+                setTimeout(updateCountdown, 1000);
+            } else if (!hasError) {
+                openApp();
+            }
+        }
+        
+        function openApp() {
+            const deepLink = type === 'recovery' 
+                ? 'airgram://auth-callback?type=recovery&success=true'
+                : 'airgram://auth-callback?type=signup&success=true';
+                
+            console.log('딥링크 호출:', deepLink);
+            window.location.href = deepLink;
+            
+            setTimeout(() => {
+                titleElement.textContent = '앱으로 이동 중...';
+                subtitleElement.textContent = 'Airgram 앱이 열리지 않으면 수동으로 열어주세요.';
+                countdownElement.textContent = '';
+            }, 1000);
+        }
+        
+        function closeWindow() {
+            openApp();
+            setTimeout(() => {
+                try {
+                    window.close();
+                } catch (e) {
+                    console.log('창 닫기 실패:', e);
+                }
+            }, 500);
+        }
+        
+        // 에러 처리
+        if (hasError) {
+            iconElement.textContent = '❌';
+            titleElement.textContent = '인증 실패';
+            subtitleElement.innerHTML = '인증에 실패했습니다.<br>다시 시도해주세요.';
+            countdownElement.textContent = '';
+            seconds = 0;
+        } else {
+            updateCountdown();
+        }
+    </script>
+</body>
+</html>
